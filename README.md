@@ -29,7 +29,12 @@ Properties defined via record constructor syntax will be initialized to `default
 
 ## What is supported:
 
-- Simple records
+- "Simple" records
 - Generic records
 - Nested records (declared in another class)
 - Default parameters
+
+## Plans
+
+- Implement analyzer which will require all properties defined via record constructor syntax with no default value to be initialized via initialization syntax.
+- Your suggestion can be here... =)
