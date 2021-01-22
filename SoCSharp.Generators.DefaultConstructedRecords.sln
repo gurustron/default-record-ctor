@@ -8,15 +8,16 @@ ProjectSection(SolutionItems) = preProject
 	.gitignore = .gitignore
 	LICENSE = LICENSE
 	README.md = README.md
+	.editorconfig = .editorconfig
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{95F15629-1A21-4CEE-A90E-3E1C24D480FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F9877EB4-83D3-43EA-860C-6633255A1597}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoCSharp.Generator.RecordDefaultCtor", "src\SoCSharp.Generator.RecordDefaultCtor\SoCSharp.Generator.RecordDefaultCtor.csproj", "{2CC78F0D-EE9F-4325-A373-BCE37D0D92AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoCSharp.Generators.RecordDefaultCtor", "src\SoCSharp.Generators.RecordDefaultCtor\SoCSharp.Generators.RecordDefaultCtor.csproj", "{2CC78F0D-EE9F-4325-A373-BCE37D0D92AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoCSharp.Generator.RecordDefaultCtor.Tests", "tests\SoCSharp.Generator.RecordDefaultCtor.Tests\SoCSharp.Generator.RecordDefaultCtor.Tests.csproj", "{001E1309-1992-401E-8199-D761C2659AA8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoCSharp.Generators.RecordDefaultCtor.Tests", "tests\SoCSharp.Generators.RecordDefaultCtor.Tests\SoCSharp.Generators.RecordDefaultCtor.Tests.csproj", "{001E1309-1992-401E-8199-D761C2659AA8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

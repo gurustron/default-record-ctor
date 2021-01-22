@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SoCSharp.Generator.RecordDefaultCtor
+namespace SoCSharp.Generators.RecordDefaultCtor
 {
     [Generator]
     public class RecordDefaultCtorGenerator : ISourceGenerator

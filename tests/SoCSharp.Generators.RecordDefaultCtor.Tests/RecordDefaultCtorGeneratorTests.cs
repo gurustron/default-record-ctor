@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
-namespace SoCSharp.Generator.RecordDefaultCtor.Tests
+namespace SoCSharp.Generators.RecordDefaultCtor.Tests
 {
     public class RecordDefaultCtorGeneratorTests
     {
