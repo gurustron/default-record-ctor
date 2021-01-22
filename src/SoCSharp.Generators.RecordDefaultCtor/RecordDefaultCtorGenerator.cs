@@ -33,11 +33,11 @@ namespace SoCSharp.Generators.RecordDefaultCtor
 
                 var semanticModel = context.Compilation.GetSemanticModel(recordDeclaration.SyntaxTree);
                 var recordName = recordDeclaration.Identifier.ToString();
-                
+
                 SyntaxNode root = recordDeclaration;
                 List<UsingDirectiveSyntax> usings = new();
                 List<string> wrappers = new();
-                while (root?.Parent != null)
+                while (root.Parent != null)
                 {
                     root = root.Parent;
                     if (root is TypeDeclarationSyntax tds)
@@ -54,7 +54,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                         var @namespace = namespaceDeclaration.Name.ToString();
                         wrappers.Add($"namespace {@namespace}{Environment.NewLine}{{");
                     }
-                    
+
                     usings.AddRange(root.ChildNodes().OfType<UsingDirectiveSyntax>());
                 }
 
@@ -63,7 +63,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                 // process parameters
                 List<string> @params = new();
                 var syntaxNodes = recordDeclaration.ParameterList.ChildNodes().ToList();
-                
+
                 foreach (var parameter in syntaxNodes.OfType<ParameterSyntax>())
                 {
                     switch (parameter.Default?.Value)
@@ -71,7 +71,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                         case null:
                         case DefaultExpressionSyntax: // check if type actually matches
                         case LiteralExpressionSyntax lexs when lexs.IsKind(SyntaxKind.DefaultLiteralExpression):
-                            var typeSymbol = ModelExtensions.GetTypeInfo(semanticModel, parameter.Type).Type;
+                            var typeSymbol = ModelExtensions.GetTypeInfo(semanticModel, parameter.Type!).Type;
                             @params.Add($"default({typeSymbol})");
                             break;
                         default:  @params.Add(parameter.Default.Value.ToString());
@@ -104,14 +104,5 @@ namespace SoCSharp.Generators.RecordDefaultCtor
         {
             return $"{tds.Modifiers.ToString()} {tds.Keyword} {tds.Identifier}{tds.TypeParameterList?.ToString()}";
         }
-        private static string GetFullyQualifiedTypeName(ITypeSymbol typeSymbol) =>
-            typeSymbol switch
-            {
-                ITypeParameterSymbol => typeSymbol.Name,
-                INamedTypeSymbol {IsGenericType: true} nts =>
-                    $"{nts.ContainingNamespace}.{nts.Name}<{string.Join(",",nts.TypeArguments.Select(GetFullyQualifiedTypeName))}>",
-                INamedTypeSymbol nts => $"{nts.ContainingNamespace}.{nts.Name}",
-                _ => throw new Exception($"Unsupported type {typeSymbol?.GetType()}.")
-            };
     }
 }

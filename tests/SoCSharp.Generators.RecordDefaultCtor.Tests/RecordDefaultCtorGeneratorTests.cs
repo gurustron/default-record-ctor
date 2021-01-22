@@ -66,10 +66,10 @@ namespace MyCode.Top.Child
 #pragma warning disable CS8019
     using System.Collections.Generic;
 #pragma warning restore CS8019
-    public class Program 
+    public class Program
     {{
         public const string Constant = ""Test"";
-        public static void Main(string[] args) => Console.WriteLine(); 
+        public static void Main(string[] args) => Console.WriteLine();
     }}
 
     {string.Join(Environment.NewLine, cases)}
@@ -187,7 +187,7 @@ namespace MyCode.Top.Child
         }
 
         private static void DefaultAssert(
-            ImmutableArray<Diagnostic> generatorDiagnostics, 
+            ImmutableArray<Diagnostic> generatorDiagnostics,
             Compilation compilation,
             int expectedSyntaxTreesCount)
         {
@@ -200,7 +200,7 @@ namespace MyCode.Top.Child
         // - create analyzer for required fields
         // - multiples files
         // - global namespace
-        // - namespace collision ?? 
+        // - namespace collision ??
         // - custom ctor with same number of parameters but
 
         private static Compilation CreateCompilation(string source)
@@ -230,7 +230,7 @@ namespace MyCode.Top.Child
             return updatedCompilation;
         }
 
-        private static MetadataReference[] GetGlobalReferences()
+        private static PortableExecutableReference[] GetGlobalReferences()
         {
             var assemblies = new[]
             {
@@ -245,12 +245,12 @@ namespace MyCode.Top.Child
             //The location of the .NET assemblies
             var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
-            /* 
+            /*
                 * Adding some necessary .NET assemblies
                 * These assemblies couldn't be loaded correctly via the same construction as above,
                 * in specific the System.Runtime.
                 */
-            returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "mscorlib.dll")));
+            returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath!, "mscorlib.dll")));
             returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.dll")));
             returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Core.dll")));
             returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")));
