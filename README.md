@@ -37,5 +37,5 @@ Properties defined via record constructor syntax will be initialized to `default
 ## Plans
 
 - Implement analyzer which will require all properties defined via record constructor syntax with no default value to be initialized via initialization syntax.
-- Allow configure behaviour
+- Allow behaviour configuration
 - Your suggestions can be here... =)
