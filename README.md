@@ -38,4 +38,4 @@ Properties defined via record constructor syntax will be initialized to `default
 
 - Implement analyzer which will require all properties defined via record constructor syntax with no default value to be initialized via initialization syntax.
 - Allow configure behaviour
-- Your suggestion can be here... =)
+- Your suggestions can be here... =)
