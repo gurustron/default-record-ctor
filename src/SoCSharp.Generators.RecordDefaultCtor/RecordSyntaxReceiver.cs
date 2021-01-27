@@ -21,7 +21,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                     return;
                 }
 
-                if (record.ChildNodes().Any(HasDefaultCtor))
+                if (record.ChildNodes().Any(IsDefaultCtor))
                 {
                     return;
                 }
@@ -34,7 +34,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                 RecordDeclarations.Add(record);
             }
 
-            bool HasDefaultCtor(SyntaxNode node)
+            bool IsDefaultCtor(SyntaxNode node)
             {
                 if (node is ConstructorDeclarationSyntax ctr && !ctr.ParameterList.ChildNodes().Any())
                 {

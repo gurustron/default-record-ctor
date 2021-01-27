@@ -186,6 +186,53 @@ namespace MyCode.Top.Child
             DefaultAssert(generatorDiags, newComp, 2);
         }
 
+        [Test]
+        public void RecordMultipleFiles_Generates()
+        {
+            var firstFile = @"
+namespace MyCode.Top.Child
+{
+    using System;
+    public class Program { public static void Main(string[] args) => Console.WriteLine(); }
+    public partial record Record(int I);
+}";
+            var secondFile = @"
+namespace MyCode.Top.Child
+{
+    public partial record Record {}
+}";
+
+            var comp = CreateCompilation(firstFile, secondFile);
+            var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
+
+            DefaultAssert(generatorDiags, newComp, 3);
+        }
+
+        [Test]
+        public void RecordMultipleFiles_DoesNotGenerate()
+        {
+            var firstFile = @"
+namespace MyCode.Top.Child
+{
+    using System;
+    public class Program { public static void Main(string[] args) => Console.WriteLine(); }
+    public partial record Record(int I);
+}";
+            var secondFile = @"
+namespace MyCode.Top.Child
+{
+    public partial record Record
+    {
+        public Record():this(1){}
+    }
+}";
+
+            var comp = CreateCompilation(firstFile, secondFile);
+            var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
+
+            DefaultAssert(generatorDiags, newComp, 3);
+        }
+
         private static void DefaultAssert(
             ImmutableArray<Diagnostic> generatorDiagnostics,
             Compilation compilation,
@@ -203,14 +250,20 @@ namespace MyCode.Top.Child
         // - namespace collision ??
         // - custom ctor with same number of parameters but
 
-        private static Compilation CreateCompilation(string source)
+        private static Compilation CreateCompilation(string source, params string[] additionalSources)
         {
             return CSharpCompilation.Create(
                 "compilation",
-                new[] {CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview))},
+                new[] {ParseText(source)}
+                    .Union(additionalSources.Select(ParseText)),
                 GetGlobalReferences(),
                 new CSharpCompilationOptions(OutputKind.ConsoleApplication)
             );
+
+            SyntaxTree ParseText(string s)
+            {
+                return CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview));
+            }
         }
 
         private static GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators)
@@ -243,14 +296,14 @@ namespace MyCode.Top.Child
                 .ToList();
 
             //The location of the .NET assemblies
-            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
 
             /*
                 * Adding some necessary .NET assemblies
                 * These assemblies couldn't be loaded correctly via the same construction as above,
                 * in specific the System.Runtime.
                 */
-            returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath!, "mscorlib.dll")));
+            returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "mscorlib.dll")));
             returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.dll")));
             returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Core.dll")));
             returnList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")));
