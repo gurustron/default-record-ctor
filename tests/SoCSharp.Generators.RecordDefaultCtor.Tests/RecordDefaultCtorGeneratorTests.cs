@@ -230,7 +230,7 @@ namespace MyCode.Top.Child
             var comp = CreateCompilation(firstFile, secondFile);
             var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
 
-            DefaultAssert(generatorDiags, newComp, 3);
+            DefaultAssert(generatorDiags, newComp, 2);
         }
 
         private static void DefaultAssert(

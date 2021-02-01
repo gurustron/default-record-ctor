@@ -14,14 +14,14 @@ namespace SoCSharp.Generators.RecordDefaultCtor
         {
             if (syntaxNode is RecordDeclarationSyntax record)
             {
-                //TODO: filter out nodes with compilation errors
+                //TODO: filter out nodes with compilation errors?
 
                 if (!record.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
                 {
                     return;
                 }
 
-                if (record.ChildNodes().Any(IsDefaultCtor))
+                if (record.HasDefaultCtor())
                 {
                     return;
                 }
@@ -33,16 +33,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor
 
                 RecordDeclarations.Add(record);
             }
-
-            bool IsDefaultCtor(SyntaxNode node)
-            {
-                if (node is ConstructorDeclarationSyntax ctr && !ctr.ParameterList.ChildNodes().Any())
-                {
-                    return true;
-                }
-
-                return false;
-            }
         }
+
     }
 }

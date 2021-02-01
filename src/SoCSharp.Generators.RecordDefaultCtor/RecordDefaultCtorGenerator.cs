@@ -32,8 +32,34 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                 }
 
                 var semanticModel = context.Compilation.GetSemanticModel(recordDeclaration.SyntaxTree);
-                var recordName = recordDeclaration.Identifier.ToString();
+                var currLocation = recordDeclaration.GetLocation();
+                var currDeclaredSymbol = semanticModel.GetDeclaredSymbol(recordDeclaration);
+                var canProcess = true;
+                foreach (var location in currDeclaredSymbol!.Locations)
+                {
+                    if (currLocation.SourceSpan.Contains(location.SourceSpan) || location.SourceSpan.Contains(currLocation.SourceSpan))
+                    {
+                        continue;
+                    }
 
+                    var otherRecordDeclaration = location.SourceTree.GetRoot()
+                        .DescendantNodesAndSelf()
+                        .OfType<RecordDeclarationSyntax>()
+                        .Where(syntax => context.Compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax) == currDeclaredSymbol)
+                        .ToArray();
+                    if (otherRecordDeclaration.Any(syntax => syntax.HasDefaultCtor()))
+                    {
+                        canProcess = false;
+                        break;
+                    }
+                }
+
+                if (!canProcess)
+                {
+                    continue;
+                }
+
+                var recordName = recordDeclaration.Identifier.ToString();
                 SyntaxNode root = recordDeclaration;
                 List<UsingDirectiveSyntax> usings = new();
                 List<string> wrappers = new();
