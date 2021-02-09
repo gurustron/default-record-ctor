@@ -42,11 +42,14 @@ namespace SoCSharp.Generators.RecordDefaultCtor
                         continue;
                     }
 
-                    var otherRecordDeclaration = location.SourceTree.GetRoot()
+                    var otherRecordDeclaration = location.SourceTree?.GetRoot()
                         .DescendantNodesAndSelf()
                         .OfType<RecordDeclarationSyntax>()
-                        .Where(syntax => context.Compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax) == currDeclaredSymbol)
-                        .ToArray();
+                        .Where(syntax =>
+                            SymbolEqualityComparer.Default.Equals(
+                                context.Compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax),
+                                currDeclaredSymbol))
+                        .ToArray() ?? Enumerable.Empty<RecordDeclarationSyntax>();
                     if (otherRecordDeclaration.Any(syntax => syntax.HasDefaultCtor()))
                     {
                         canProcess = false;
