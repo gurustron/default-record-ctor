@@ -42,7 +42,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Generate
                         continue;
                     }
 
-                    var otherRecordDeclaration = location.SourceTree?.GetRoot()
+                    var otherRecordDeclarations = location.SourceTree?.GetRoot()
                         .DescendantNodesAndSelf()
                         .OfType<RecordDeclarationSyntax>()
                         .Where(syntax =>
@@ -50,7 +50,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Generate
                                 context.Compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax),
                                 currDeclaredSymbol))
                         .ToArray() ?? Enumerable.Empty<RecordDeclarationSyntax>();
-                    if (otherRecordDeclaration.Any(syntax => syntax.HasDefaultCtor()))
+                    if (otherRecordDeclarations.Any(syntax => syntax.HasDefaultCtor()))
                     {
                         canProcess = false;
                         break;

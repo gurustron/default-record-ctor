@@ -1,7 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
@@ -14,14 +16,14 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
         private const string Description = "Record should initialize all required properties.";
 
         internal static DiagnosticDescriptor Rule =
-            new DiagnosticDescriptor(
+            new(
                 DiagnosticIds.MissingRequiredPropsInitAnalyzerRuleId,
                 Title,
                 MessageFormat,
                 DiagnosticCategories.MissingRequiredPropsInitAnalyzer,
                 DiagnosticSeverity.Warning,
-                isEnabledByDefault: true,
-                description: Description);
+                true,
+                Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -32,19 +34,52 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
             var analyzer = new CompilationAnalyzer();
             context.RegisterCompilationStartAction(analyzer.OnStarted);
             context.RegisterSymbolAction(analyzer.AnalyzeSymbol, SymbolKind.NamedType);
+            // context.RegisterSyntaxNodeAction();
         }
 
         private class CompilationAnalyzer
         {
             public void OnStarted(CompilationStartAnalysisContext context)
             {
-
             }
 
             public void AnalyzeSymbol(SymbolAnalysisContext context)
             {
                 if (context.Symbol is INamedTypeSymbol namedType)
                 {
+                    var syntax = namedType.DeclaringSyntaxReferences
+                        .Select(sr => sr.GetSyntax())
+                        .OfType<RecordDeclarationSyntax>();
+                    RecordDeclarationSyntax? suitable = null;
+                    // bool HasDefaultCtor = false;
+                    foreach (var record in syntax)
+                    {
+                        context.CancellationToken.ThrowIfCancellationRequested();
+                        // var generatedKind = context.Compilation.Options.SyntaxTreeOptionsProvider.IsGenerated(record.SyntaxTree,
+                        //     context.CancellationToken);
+                        // SyntaxNode? parent = record;
+                        // while (parent.Parent is not null)
+                        // {
+                        //     parent = parent.Parent;
+                        // }
+                        // var generatedKind1 = context.Compilation.Options.SyntaxTreeOptionsProvider.IsGenerated(parent.SyntaxTree,
+                        //     context.CancellationToken);
+
+                        // if(record.HasDefaultCtor())
+                        if (record.IsSuitable())
+                        {
+                            suitable = record;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            public void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
+            {
+                if (context.Node is RecordDeclarationSyntax)
+                {
+
                 }
             }
         }

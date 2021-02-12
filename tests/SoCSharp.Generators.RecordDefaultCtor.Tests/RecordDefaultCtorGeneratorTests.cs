@@ -2,9 +2,12 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using NUnit.Framework;
+using SoCSharp.Generators.RecordDefaultCtor.Analyze;
 using SoCSharp.Generators.RecordDefaultCtor.Generate;
 using SoCSharp.Generators.RecordDefaultCtor.Tests.TestInfrastructure;
+using System.Threading.Tasks;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Tests
 {
@@ -231,6 +234,29 @@ namespace MyCode.Top.Child
             var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
 
             DefaultAssert(generatorDiags, newComp, 2);
+        }
+
+        [Test]
+        public async Task SmokeAnalyzer()
+        {
+            var userSource = @"
+namespace MyCode.Top.Child
+{
+    using System;
+    public class Program { public static void Main(string[] args) => Console.WriteLine(); }
+
+    public partial record TestRecord(int Foo);
+}";
+            var comp = CreateCompilation(userSource);
+            var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
+            var diagnostics = await newComp
+                .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new MissingRequiredPropsInitAnalyzer()))
+                .GetAnalyzerDiagnosticsAsync();
+
+            Assert.IsEmpty(generatorDiags);
+            var immutableArray = newComp.GetDiagnostics();
+            Assert.IsEmpty(immutableArray);
+            Assert.AreEqual(4, newComp.SyntaxTrees.Count());
         }
 
         private static void DefaultAssert(

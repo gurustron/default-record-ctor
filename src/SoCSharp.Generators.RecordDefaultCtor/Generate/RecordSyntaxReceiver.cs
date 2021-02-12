@@ -12,28 +12,10 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Generate
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            if (syntaxNode is RecordDeclarationSyntax record)
+            if (syntaxNode is RecordDeclarationSyntax record && record.IsSuitable())
             {
-                //TODO: filter out nodes with compilation errors?
-
-                if (!record.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
-                {
-                    return;
-                }
-
-                if (record.HasDefaultCtor())
-                {
-                    return;
-                }
-
-                if (record.ParameterList is null)
-                {
-                    return;
-                }
-
                 RecordDeclarations.Add(record);
             }
         }
-
     }
 }

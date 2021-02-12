@@ -5,19 +5,17 @@ using System.Linq;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Tests.TestInfrastructure
 {
-    public abstract class GeneratorTestBase:RoslynTestBase
+    public abstract class GeneratorTestBase : RoslynTestBase
     {
-
-        protected GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators)
-        {
-            return CSharpGeneratorDriver.Create(
+        protected GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators) =>
+            CSharpGeneratorDriver.Create(
                 ImmutableArray.Create(generators),
                 ImmutableArray<AdditionalText>.Empty,
-                (CSharpParseOptions) compilation.SyntaxTrees.First().Options
+                (CSharpParseOptions)compilation.SyntaxTrees.First().Options
             );
-        }
 
-        protected Compilation RunGenerators(Compilation compilation, out ImmutableArray<Diagnostic> diagnostics,
+        protected Compilation RunGenerators(Compilation compilation,
+            out ImmutableArray<Diagnostic> diagnostics,
             params ISourceGenerator[] generators)
         {
             CreateDriver(compilation, generators)
