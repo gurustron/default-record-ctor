@@ -20,12 +20,13 @@ namespace MyCode.Top.Child
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine(new Record(1));
+            Console.WriteLine(new Record{ i = 1 });
         }
     }
 
     public partial record Record(int i)
     {
+        public Record() : this(0) { }
     }
 }";
             var diagnostics = await RunAnalyzer<MissingRequiredPropsInitAnalyzer>(userSource);

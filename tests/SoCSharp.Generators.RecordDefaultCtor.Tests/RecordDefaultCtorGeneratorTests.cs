@@ -256,7 +256,7 @@ namespace MyCode.Top.Child
             Assert.IsEmpty(generatorDiags);
             var immutableArray = newComp.GetDiagnostics();
             Assert.IsEmpty(immutableArray);
-            Assert.AreEqual(4, newComp.SyntaxTrees.Count());
+            Assert.AreEqual(2, newComp.SyntaxTrees.Count());
         }
 
         private static void DefaultAssert(

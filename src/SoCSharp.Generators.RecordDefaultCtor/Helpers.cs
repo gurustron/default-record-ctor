@@ -10,14 +10,14 @@ namespace SoCSharp.Generators.RecordDefaultCtor
         public static bool HasDefaultCtor(this RecordDeclarationSyntax recordDeclarationSyntax)
             => recordDeclarationSyntax.ChildNodes().Any(IsDefaultCtor);
 
-        public static bool IsSuitable(this RecordDeclarationSyntax recordSyntax)
+        public static bool IsSuitable(this RecordDeclarationSyntax recordSyntax, bool shouldNotHaveDefaultCtor = true)
         {
             if (!recordSyntax.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
             {
                 return false;
             }
 
-            if (recordSyntax.HasDefaultCtor())
+            if (shouldNotHaveDefaultCtor && recordSyntax.HasDefaultCtor())
             {
                 return false;
             }

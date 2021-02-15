@@ -1,7 +1,10 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -31,30 +34,37 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
+
             var analyzer = new CompilationAnalyzer();
-            context.RegisterCompilationStartAction(analyzer.OnStarted);
+            context.RegisterCompilationStartAction(analysisContext => analysisContext.RegisterCompilationEndAction(analyzer.OnCompilationEnd));
+            context.RegisterSemanticModelAction(analyzer.AnalyzeSemanticModel);
             context.RegisterSymbolAction(analyzer.AnalyzeSymbol, SymbolKind.NamedType);
-            // context.RegisterSyntaxNodeAction();
+            context.RegisterSyntaxNodeAction(analyzer.AnalyzeSyntaxNode, SyntaxKind.ObjectCreationExpression);
         }
 
         private class CompilationAnalyzer
         {
-            public void OnStarted(CompilationStartAnalysisContext context)
+            public SemanticModelAnalysisContext SemanticModelContext { get; internal set; }
+            public HashSet<RecordDeclarationSyntax> RecordDeclarations { get; } = new();
+            public HashSet<ObjectCreationExpressionSyntax> ObjectCreationExpressions { get; } = new();
+
+            public void AnalyzeSemanticModel(SemanticModelAnalysisContext context)
             {
+                SemanticModelContext = context;
             }
 
+            // TODO: move to AnalyzeSyntaxNode?
             public void AnalyzeSymbol(SymbolAnalysisContext context)
             {
                 if (context.Symbol is INamedTypeSymbol namedType)
                 {
-                    var syntax = namedType.DeclaringSyntaxReferences
+                    var recordDeclarations = namedType.DeclaringSyntaxReferences
                         .Select(sr => sr.GetSyntax())
                         .OfType<RecordDeclarationSyntax>();
-                    RecordDeclarationSyntax? suitable = null;
-                    // bool HasDefaultCtor = false;
-                    foreach (var record in syntax)
+                    foreach (var record in recordDeclarations)
                     {
                         context.CancellationToken.ThrowIfCancellationRequested();
+                        // TODO: need to check that file was generated?
                         // var generatedKind = context.Compilation.Options.SyntaxTreeOptionsProvider.IsGenerated(record.SyntaxTree,
                         //     context.CancellationToken);
                         // SyntaxNode? parent = record;
@@ -66,9 +76,9 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                         //     context.CancellationToken);
 
                         // if(record.HasDefaultCtor())
-                        if (record.IsSuitable())
+                        if (record.IsSuitable(false))
                         {
-                            suitable = record;
+                            RecordDeclarations.Add(record);
                             break;
                         }
                     }
@@ -77,9 +87,25 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
 
             public void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
             {
-                if (context.Node is RecordDeclarationSyntax)
+                if (context.Node is ObjectCreationExpressionSyntax {Initializer: not null} oce)
                 {
+                    var typeInfo = context.SemanticModel.GetTypeInfo(oce);
+                    ObjectCreationExpressions.Add(oce);
+                }
+            }
 
+            public void OnCompilationEnd(CompilationAnalysisContext context)
+            {
+                if (RecordDeclarations.Any() && ObjectCreationExpressions.Any())
+                {
+                    foreach (var oce in ObjectCreationExpressions)
+                    {
+                        context.CancellationToken.ThrowIfCancellationRequested();
+
+                        var typeInfo = SemanticModelContext.SemanticModel.GetTypeInfo(oce);
+                        // var model = context.Compilation.GetSemanticModel(oce.SyntaxTree);
+                        // var typeInfo = model.GetTypeInfo(oce);
+                    }
                 }
             }
         }
