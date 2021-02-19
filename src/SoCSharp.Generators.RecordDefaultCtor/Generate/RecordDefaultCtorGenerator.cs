@@ -91,9 +91,9 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Generate
 
                 // process parameters
                 List<string> @params = new();
-                var syntaxNodes = recordDeclaration.ParameterList.ChildNodes().ToList();
 
-                foreach (var parameter in syntaxNodes.OfType<ParameterSyntax>())
+                var parameters = recordDeclaration.ParameterList.ChildNodes().OfType<ParameterSyntax>();
+                foreach (var parameter in parameters)
                 {
                     switch (parameter.Default?.Value)
                     {

@@ -15,7 +15,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
     public class MissingRequiredPropsInitAnalyzer : DiagnosticAnalyzer
     {
         private const string Title = "Record should initialize all required properties.";
-        public const string MessageFormat = "Record '{0}' has next missing required properties {1}.";
+        public const string MessageFormat = "Record '{0}' has missing required properties: {1}.";
         private const string Description = "Record should initialize all required properties.";
 
         internal static DiagnosticDescriptor Rule =
@@ -89,7 +89,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
             {
                 if (context.Node is ObjectCreationExpressionSyntax {Initializer: not null} oce)
                 {
-                    var typeInfo = context.SemanticModel.GetTypeInfo(oce);
+                    // var typeInfo = context.SemanticModel.GetTypeInfo(oce);
                     ObjectCreationExpressions.Add(oce);
                 }
             }
@@ -98,13 +98,39 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
             {
                 if (RecordDeclarations.Any() && ObjectCreationExpressions.Any())
                 {
+                    var requiredParams = RecordDeclarations
+                        .Select(rds => (ti: SemanticModelContext.SemanticModel.GetDeclaredSymbol(rds), rds))
+                        .ToDictionary(
+                            t => t.ti,
+                            t => t.rds.ParameterList!
+                                .ChildNodes()
+                                .OfType<ParameterSyntax>()
+                                .Where(ps => ps.Default is null)
+                                .Select(ps => ps.Identifier.ToString())
+                                .ToList());
+
                     foreach (var oce in ObjectCreationExpressions)
                     {
                         context.CancellationToken.ThrowIfCancellationRequested();
 
                         var typeInfo = SemanticModelContext.SemanticModel.GetTypeInfo(oce);
-                        // var model = context.Compilation.GetSemanticModel(oce.SyntaxTree);
-                        // var typeInfo = model.GetTypeInfo(oce);
+
+                        if (typeInfo.Type is INamedTypeSymbol nts && requiredParams.TryGetValue(nts, out var @params))
+                        {
+                            var present = oce.Initializer.Expressions
+                                .OfType<AssignmentExpressionSyntax>()
+                                .Where(e => e.Left is IdentifierNameSyntax)
+                                .Select(e => e.Left.ToString());
+
+                            var missing = @params
+                                .Except(present)
+                                .ToList();
+
+                            context.ReportDiagnostic(Diagnostic.Create(Rule,
+                                oce.GetLocation(),
+                                typeInfo.Type,
+                                string.Join(", ", missing)));
+                        }
                     }
                 }
             }

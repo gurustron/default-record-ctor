@@ -21,6 +21,8 @@ namespace MyCode.Top.Child
         public static void Main(string[] args)
         {
             Console.WriteLine(new Record{ i = 1 });
+            Console.WriteLine(new Record{});
+            Console.WriteLine(new Record());
         }
     }
 
@@ -33,7 +35,7 @@ namespace MyCode.Top.Child
 
             diagnostics
                 .Should()
-                .BeEmpty();
+                .NotBeEmpty();
         }
     }
 }
