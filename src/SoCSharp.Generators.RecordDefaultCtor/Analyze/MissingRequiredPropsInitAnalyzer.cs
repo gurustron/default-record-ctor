@@ -96,6 +96,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
 
             public void OnCompilationEnd(CompilationAnalysisContext context)
             {
+                // TODO: check empty default constructors
                 if (RecordDeclarations.Any() && ObjectCreationExpressions.Any())
                 {
                     var requiredParams = RecordDeclarations
