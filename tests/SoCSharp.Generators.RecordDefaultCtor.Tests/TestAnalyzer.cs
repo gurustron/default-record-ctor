@@ -11,7 +11,6 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Tests
         [Test]
         public async Task Test()
         {
-
             var userSource = @"
 namespace MyCode.Top.Child
 {
@@ -23,6 +22,7 @@ namespace MyCode.Top.Child
             Console.WriteLine(new Record{ i = 1 });
             Console.WriteLine(new Record{});
             Console.WriteLine(new Record());
+            Console.WriteLine(new Record(1));
         }
     }
 
@@ -35,7 +35,9 @@ namespace MyCode.Top.Child
 
             diagnostics
                 .Should()
-                .NotBeEmpty();
+                .NotBeEmpty()
+                .And
+                .HaveCount(2);
         }
     }
 }

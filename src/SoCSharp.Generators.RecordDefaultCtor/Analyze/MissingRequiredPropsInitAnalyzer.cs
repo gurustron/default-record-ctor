@@ -2,11 +2,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
@@ -15,7 +12,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
     public class MissingRequiredPropsInitAnalyzer : DiagnosticAnalyzer
     {
         private const string Title = "Record should initialize all required properties.";
-        public const string MessageFormat = "Record '{0}' has missing required properties: {1}.";
+        public const string MessageFormat = "Record's '{0}' initializer has missing required properties: {1}.";
         private const string Description = "Record should initialize all required properties.";
 
         internal static DiagnosticDescriptor Rule =
@@ -87,7 +84,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
 
             public void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
             {
-                if (context.Node is ObjectCreationExpressionSyntax {Initializer: not null} oce)
+                if (context.Node is ObjectCreationExpressionSyntax oce && (oce.ArgumentList is null || !oce.ArgumentList.Arguments.Any()))
                 {
                     // var typeInfo = context.SemanticModel.GetTypeInfo(oce);
                     ObjectCreationExpressions.Add(oce);
@@ -118,19 +115,25 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
 
                         if (typeInfo.Type is INamedTypeSymbol nts && requiredParams.TryGetValue(nts, out var @params))
                         {
-                            var present = oce.Initializer.Expressions
+                            var present = oce.Initializer?
+                                .Expressions
                                 .OfType<AssignmentExpressionSyntax>()
                                 .Where(e => e.Left is IdentifierNameSyntax)
                                 .Select(e => e.Left.ToString());
 
-                            var missing = @params
-                                .Except(present)
-                                .ToList();
+                            var missing = present is null
+                                ? @params
+                                : @params
+                                    .Except(present)
+                                    .ToList();
 
-                            context.ReportDiagnostic(Diagnostic.Create(Rule,
-                                oce.GetLocation(),
-                                typeInfo.Type,
-                                string.Join(", ", missing)));
+                            if (missing.Any())
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(Rule,
+                                    oce.GetLocation(),
+                                    typeInfo.Type,
+                                    string.Join(", ", missing)));
+                            }
                         }
                     }
                 }
