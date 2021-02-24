@@ -73,7 +73,12 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                         //     context.CancellationToken);
 
                         // if(record.HasDefaultCtor())
-                        if (record.IsSuitable(false))
+                        // if (record.IsSuitable(false))
+                        // {
+                        //     RecordDeclarations.Add(record);
+                        //     break;
+                        // }
+                        if (record.SyntaxTree.FilePath.EndsWith(Helpers.Suffix))
                         {
                             RecordDeclarations.Add(record);
                             break;
@@ -86,7 +91,6 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
             {
                 if (context.Node is ObjectCreationExpressionSyntax oce && (oce.ArgumentList is null || !oce.ArgumentList.Arguments.Any()))
                 {
-                    // var typeInfo = context.SemanticModel.GetTypeInfo(oce);
                     ObjectCreationExpressions.Add(oce);
                 }
             }

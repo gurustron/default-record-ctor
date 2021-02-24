@@ -7,6 +7,8 @@ namespace SoCSharp.Generators.RecordDefaultCtor
 {
     internal static class Helpers
     {
+        public static string Suffix => "scs.ctor.generated.cs";
+
         public static bool HasDefaultCtor(this RecordDeclarationSyntax recordDeclarationSyntax)
             => recordDeclarationSyntax.ChildNodes().Any(IsDefaultCtor);
 

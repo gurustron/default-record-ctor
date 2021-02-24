@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Generate
 {
@@ -125,7 +126,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Generate
     {string.Join(Environment.NewLine + "\t", Enumerable.Repeat("}", wrappers.Count))}
 ";
 // @formatter:on
-                context.AddSource($"{recordName}.Ctor.{Guid.NewGuid():N}.cs", code);
+                context.AddSource($"{recordName}.{Guid.NewGuid():N}.{Helpers.Suffix}", code);
             }
         }
 
