@@ -243,9 +243,18 @@ namespace MyCode.Top.Child
 namespace MyCode.Top.Child
 {
     using System;
-    public class Program { public static void Main(string[] args) => Console.WriteLine(); }
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            Console.WriteLine(new Record{ i = 1 });
 
-    public partial record TestRecord(int Foo);
+        }
+    }
+
+    public partial record Record(int i)
+    {
+    }
 }";
             var comp = CreateCompilation(userSource);
             var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
@@ -257,6 +266,7 @@ namespace MyCode.Top.Child
             var immutableArray = newComp.GetDiagnostics();
             Assert.IsEmpty(immutableArray);
             Assert.AreEqual(2, newComp.SyntaxTrees.Count());
+            Assert.IsEmpty(diagnostics);
         }
 
         private static void DefaultAssert(

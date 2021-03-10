@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Tests
 {
-    public class TestAnalyzer : AnalyzerTestBase
+    public class TestAnalyzer : AnalyzerForGeneratedTestBase
     {
         [Test]
         public async Task Test()
@@ -28,7 +28,6 @@ namespace MyCode.Top.Child
 
     public partial record Record(int i)
     {
-        public Record() : this(0) { }
     }
 }";
             var diagnostics = await RunAnalyzer<MissingRequiredPropsInitAnalyzer>(userSource);
