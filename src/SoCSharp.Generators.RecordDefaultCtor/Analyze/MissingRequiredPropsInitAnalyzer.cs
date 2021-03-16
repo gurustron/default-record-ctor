@@ -34,21 +34,15 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
 
             var analyzer = new CompilationAnalyzer();
             context.RegisterCompilationStartAction(analysisContext => analysisContext.RegisterCompilationEndAction(analyzer.OnCompilationEnd));
-            context.RegisterSemanticModelAction(analyzer.AnalyzeSemanticModel);
             context.RegisterSymbolAction(analyzer.AnalyzeSymbol, SymbolKind.NamedType);
             context.RegisterSyntaxNodeAction(analyzer.AnalyzeSyntaxNode, SyntaxKind.ObjectCreationExpression);
         }
 
         private class CompilationAnalyzer
         {
-            public SemanticModelAnalysisContext SemanticModelContext { get; internal set; }
             public HashSet<RecordDeclarationSyntax> RecordDeclarations { get; } = new();
             public HashSet<ObjectCreationExpressionSyntax> ObjectCreationExpressions { get; } = new();
 
-            public void AnalyzeSemanticModel(SemanticModelAnalysisContext context)
-            {
-                SemanticModelContext = context;
-            }
 
             // TODO: move to AnalyzeSyntaxNode?
             public void AnalyzeSymbol(SymbolAnalysisContext context)
@@ -58,9 +52,15 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                     var recordDeclarations = namedType.DeclaringSyntaxReferences
                         .Select(sr => sr.GetSyntax())
                         .OfType<RecordDeclarationSyntax>();
+                    RecordDeclarationSyntax suitable = null;
+                    var isGenerated = false;
                     foreach (var record in recordDeclarations)
                     {
                         context.CancellationToken.ThrowIfCancellationRequested();
+                        if (isGenerated && suitable is not null)
+                        {
+                            break;
+                        }
                         // TODO: need to check that file was generated?
                         // var generatedKind = context.Compilation.Options.SyntaxTreeOptionsProvider.IsGenerated(record.SyntaxTree,
                         //     context.CancellationToken);
@@ -78,11 +78,22 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                         //     RecordDeclarations.Add(record);
                         //     break;
                         // }
-                        if (record.SyntaxTree.FilePath.EndsWith(Helpers.Suffix))
+                        if (record.IsSuitable(false))
                         {
-                            RecordDeclarations.Add(record);
-                            break;
+                            suitable = record;
                         }
+
+                        isGenerated |= record.SyntaxTree.FilePath.EndsWith(Helpers.Suffix);
+                    }
+
+                    if (isGenerated && suitable is null)
+                    {
+                        // todo - report bug
+                    }
+
+                    if (isGenerated)
+                    {
+                        RecordDeclarations.Add(suitable);
                     }
                 }
             }
@@ -101,7 +112,27 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                 if (RecordDeclarations.Any() && ObjectCreationExpressions.Any())
                 {
                     var requiredParams = RecordDeclarations
-                        .Select(rds => (ti: SemanticModelContext.SemanticModel.GetDeclaredSymbol(rds), rds))
+                        .Select(rds =>
+                        {
+                            var semanticModel = context.Compilation.GetSemanticModel(rds.SyntaxTree);
+                            var namedTypeSymbol = semanticModel.GetDeclaredSymbol(rds);
+                            // var rdsSourceSpan = rds.GetLocation().SourceSpan;
+                            // foreach (var location in namedTypeSymbol.Locations)
+                            // {
+                            //     //namedTypeSymbol.Locations[1].SourceSpan.OverlapsWith(rds.GetLocation().SourceSpan)
+                            //     if (location.SourceSpan.OverlapsWith(rdsSourceSpan))
+                            //     {
+                            //         continue;
+                            //     }
+                            //
+                            //     // location.SourceTree
+                            //     //     .GetRoot()
+                            //     //     .DescendantNodesAndSelf()
+                            //     //     .OfType<>()
+                            // }
+
+                            return (ti: namedTypeSymbol, rds);
+                        })
                         .ToDictionary(
                             t => t.ti,
                             t => t.rds.ParameterList!
@@ -115,7 +146,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                     {
                         context.CancellationToken.ThrowIfCancellationRequested();
 
-                        var typeInfo = SemanticModelContext.SemanticModel.GetTypeInfo(oce);
+                        var typeInfo = context.Compilation.GetSemanticModel(oce.SyntaxTree).GetTypeInfo(oce);
 
                         if (typeInfo.Type is INamedTypeSymbol nts && requiredParams.TryGetValue(nts, out var @params))
                         {

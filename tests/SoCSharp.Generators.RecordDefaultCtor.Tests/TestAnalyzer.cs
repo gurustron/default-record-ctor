@@ -30,6 +30,7 @@ namespace MyCode.Top.Child
     {
     }
 }";
+
             var diagnostics = await RunAnalyzer<MissingRequiredPropsInitAnalyzer>(userSource);
 
             diagnostics
