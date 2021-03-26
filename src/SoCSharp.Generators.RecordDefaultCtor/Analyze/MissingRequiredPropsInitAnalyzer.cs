@@ -52,7 +52,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                     var recordDeclarations = namedType.DeclaringSyntaxReferences
                         .Select(sr => sr.GetSyntax())
                         .OfType<RecordDeclarationSyntax>();
-                    RecordDeclarationSyntax suitable = null;
+                    RecordDeclarationSyntax? suitable = null;
                     var isGenerated = false;
                     foreach (var record in recordDeclarations)
                     {
@@ -91,7 +91,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                         // todo - report bug
                     }
 
-                    if (isGenerated)
+                    if (isGenerated && suitable is not null)
                     {
                         RecordDeclarations.Add(suitable);
                     }
@@ -108,29 +108,18 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
 
             public void OnCompilationEnd(CompilationAnalysisContext context)
             {
-                // TODO: check empty default constructors
                 if (RecordDeclarations.Any() && ObjectCreationExpressions.Any())
                 {
                     var requiredParams = RecordDeclarations
                         .Select(rds =>
                         {
+                            context.CancellationToken.ThrowIfCancellationRequested();
                             var semanticModel = context.Compilation.GetSemanticModel(rds.SyntaxTree);
                             var namedTypeSymbol = semanticModel.GetDeclaredSymbol(rds);
-                            // var rdsSourceSpan = rds.GetLocation().SourceSpan;
-                            // foreach (var location in namedTypeSymbol.Locations)
-                            // {
-                            //     //namedTypeSymbol.Locations[1].SourceSpan.OverlapsWith(rds.GetLocation().SourceSpan)
-                            //     if (location.SourceSpan.OverlapsWith(rdsSourceSpan))
-                            //     {
-                            //         continue;
-                            //     }
-                            //
-                            //     // location.SourceTree
-                            //     //     .GetRoot()
-                            //     //     .DescendantNodesAndSelf()
-                            //     //     .OfType<>()
-                            // }
-
+                            if (namedTypeSymbol is null)
+                            {
+                                // TODO: report error
+                            }
                             return (ti: namedTypeSymbol, rds);
                         })
                         .ToDictionary(
@@ -166,7 +155,7 @@ namespace SoCSharp.Generators.RecordDefaultCtor.Analyze
                             {
                                 context.ReportDiagnostic(Diagnostic.Create(Rule,
                                     oce.GetLocation(),
-                                    typeInfo.Type,
+                                    typeInfo.Type.ToDisplayString(),
                                     string.Join(", ", missing)));
                             }
                         }
