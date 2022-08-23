@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
+using System.Reflection;
 
 namespace SoCSharp.Generators.RecordDefaultCtor.Tests
 {
@@ -38,6 +39,7 @@ namespace MyCode.Top.Child
     public record NotPartialRecord(string Foo);
 }";
             var comp = CreateCompilation(userSource);
+
             var newComp = RunGenerators(comp, out var generatorDiags, new RecordDefaultCtorGenerator());
 
             Assert.IsEmpty(generatorDiags);
@@ -212,9 +214,9 @@ namespace MyCode.Top.Child
         public void RecordMultipleFiles_DoesNotGenerate()
         {
             var firstFile = @"
+global using System;
 namespace MyCode.Top.Child
 {
-    using System;
     public class Program { public static void Main(string[] args) => Console.WriteLine(); }
     public partial record Record(int I);
 }";
@@ -224,6 +226,7 @@ namespace MyCode.Top.Child
     public partial record Record
     {
         public Record():this(1){}
+        public void Do() => Console.WriteLine();
     }
 }";
 
@@ -252,17 +255,21 @@ namespace MyCode.Top.Child
 
         private static Compilation CreateCompilation(string source, params string[] additionalSources)
         {
-            return CSharpCompilation.Create(
+            var options = new CSharpCompilationOptions(OutputKind.ConsoleApplication);
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, platform: Platform.X64);
+            var compilation = CSharpCompilation.Create(
                 "compilation",
                 new[] {ParseText(source)}
                     .Union(additionalSources.Select(ParseText)),
                 GetGlobalReferences(),
-                new CSharpCompilationOptions(OutputKind.ConsoleApplication)
+                options
             );
+
+            return compilation;
 
             SyntaxTree ParseText(string s)
             {
-                return CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview));
+                return CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Latest));
             }
         }
 
